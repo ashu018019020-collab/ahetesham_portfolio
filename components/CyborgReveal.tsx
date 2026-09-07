@@ -1,8 +1,9 @@
 'use client'
 
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 
 export default function CyborgReveal() {
+  const particleStyles = useParticleStyles();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isHovering, setIsHovering] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
@@ -101,21 +102,13 @@ export default function CyborgReveal() {
         }}
       />
 
-      {/* Floating particles inside card */}
+      {/* Floating particles inside card - deterministic values to avoid hydration mismatch */}
       <div className="absolute inset-0 z-45 pointer-events-none overflow-hidden">
-        {[...Array(8)].map((_, i) => (
+        {particleStyles.map((style, i) => (
           <div
             key={i}
             className="particle"
-            style={{
-              left: (10 + i * 12) + "%",
-              bottom: "-5%",
-              animationDuration: (4 + Math.random() * 6) + "s",
-              animationDelay: (i * 0.8) + "s",
-              opacity: 0.4,
-              width: (1 + Math.random() * 2) + "px",
-              height: (1 + Math.random() * 2) + "px",
-            }}
+            style={style}
           />
         ))}
       </div>
@@ -181,4 +174,23 @@ export default function CyborgReveal() {
       />
     </div>
   );
+}
+
+// Deterministic particle styles using seed-based random to avoid SSR hydration mismatch
+function getParticleStyles() {
+  const seed = 42;
+  return [...Array(8)].map((_, i) => ({
+    left: (10 + i * 12) + "%",
+    bottom: "-5%",
+    animationDuration: (4 + ((seed * (i + 1)) % 60) / 10) + "s",
+    animationDelay: (i * 0.8) + "s",
+    opacity: 0.4,
+    width: (1 + ((seed * (i + 2)) % 20) / 10) + "px",
+    height: (1 + ((seed * (i + 3)) % 20) / 10) + "px",
+  }));
+}
+
+function useParticleStyles() {
+  const particleStyles = useMemo(() => getParticleStyles(), []);
+  return particleStyles;
 }

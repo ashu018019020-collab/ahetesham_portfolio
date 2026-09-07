@@ -99,7 +99,11 @@ export default function Contact() {
     e.preventDefault()
     setStatus('sending')
     try {
-      const res = await fetch('https://api.web3forms.com/submit', {
+      const res = await fetch(
+        typeof window === 'undefined'
+          ? 'https://api.web3forms.com/submit'
+          : 'https://api.web3forms.com/submit',
+        {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
