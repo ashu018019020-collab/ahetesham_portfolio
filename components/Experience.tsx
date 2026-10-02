@@ -1,93 +1,61 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, type ReactNode } from 'react'
 import Section from './Section'
-import { useScrollReveal } from '@/lib/hooks'
-import { Briefcase, TrendingUp, Award } from 'lucide-react'
-
-const experiences = [
-  {
-    role: 'Power BI Intern',
-    org: 'Skill Academy',
-    period: '2024',
-    color: '#FF4500',
-    icon: '📊',
-    desc: 'Developed interactive Power BI dashboards for business intelligence reporting. Worked on data modeling, DAX calculations, and visualization best practices.',
-    skills: ['Power BI', 'DAX', 'Data Modeling', 'Visualization'],
-    achievements: [
-      'Built 5+ interactive dashboards for business stakeholders',
-      'Reduced report generation time by 40% through DAX optimization',
-      'Collaborated with cross-functional teams on data requirements',
-    ],
-    impact: { metric: '40%', label: 'Faster Reports' },
-  },
-  {
-    role: 'Data Science Intern',
-    org: 'Data Analytics Certification Program',
-    period: '2025',
-    color: '#10b981',
-    icon: '🔬',
-    desc: 'Applied data science methodologies including EDA, statistical analysis, and predictive modeling. Built end-to-end analytics pipelines with Python and SQL.',
-    skills: ['Python', 'SQL', 'EDA', 'Predictive Modeling'],
-    achievements: [
-      'Developed end-to-end analytics pipeline with Python & SQL',
-      'Built predictive models achieving 85%+ accuracy',
-      'Created automated data cleaning and transformation workflows',
-    ],
-    impact: { metric: '85%', label: 'Model Accuracy' },
-  },
-]
+import { useScrollReveal, useTilt } from '@/lib/hooks'
+import { Briefcase, TrendingUp, Award, Rocket, ExternalLink } from 'lucide-react'
+import { EXPERIENCES, type Experience as ExperienceEntry } from '@/lib/data/resume'
+import { liveHost } from '@/lib/constants'
 
 export default function Experience() {
+  // Founder work leads the timeline; internships follow under their own heading.
+  const founderRoles = EXPERIENCES.filter((e) => e.kind === 'founder')
+  const internships = EXPERIENCES.filter((e) => e.kind !== 'founder')
+
   return (
-    <Section id='experience' title='Experience' subtitle='Professional experience and internship journey.' revealVariant='3d-up'>
+    <Section id='experience' title='Experience' subtitle='Founder work and internship journey.' revealVariant='3d-up'>
       <div className="mb-6">
-        <h3 className="mb-6 flex items-center gap-2 font-display text-xl font-bold text-heading">
-          <Briefcase size={20} className="text-primary" />
-          Internships & Experience
-        </h3>
         <div className="relative space-y-8">
           {/* Animated timeline line */}
           <div className="absolute left-6 top-0 hidden h-full w-px md:block overflow-hidden">
-            <div className="h-full w-full bg-gradient-to-b from-[#FF4500]/30 via-[#10b981]/20 to-transparent" />
+            <div className="h-full w-full bg-gradient-to-b from-[#3B9EFF]/40 via-[#FF4500]/30 to-[#10b981]/20" />
             {/* Running light */}
             <div className="absolute top-0 left-0 w-full h-16 animate-timeline-pulse"
               style={{ background: 'linear-gradient(to bottom, rgba(255,69,0,0.6), transparent)' }} />
           </div>
-          {experiences.map((exp, i) => (<ExpCard key={exp.role} exp={exp} i={i} />))}
+
+          {founderRoles.length > 0 && (
+            <GroupHeading icon={<Rocket size={20} className="text-[#3B9EFF]" />} label="Founder Experience" />
+          )}
+          {founderRoles.map((exp) => (
+            <ExpCard key={exp.role} exp={exp} i={EXPERIENCES.indexOf(exp)} />
+          ))}
+
+          <GroupHeading icon={<Briefcase size={20} className="text-primary" />} label="Internships & Experience" />
+          {internships.map((exp) => (
+            <ExpCard key={exp.role} exp={exp} i={EXPERIENCES.indexOf(exp)} />
+          ))}
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes timeline-pulse {
-          0% { transform: translateY(-60px); opacity: 0; }
-          20% { opacity: 1; }
-          80% { opacity: 1; }
-          100% { transform: translateY(calc(100% + 60px)); opacity: 0; }
-        }
-        .animate-timeline-pulse {
-          animation: timeline-pulse 4s ease-in-out infinite;
-        }
-      `}</style>
     </Section>
   )
 }
 
-function ExpCard({ exp, i }: { exp: typeof experiences[0]; i: number }) {
-  const ref = useScrollReveal(i * 80)
-  const cardRef = useRef<HTMLDivElement>(null)
-  const [hovered, setHovered] = useState(false)
-  const [tilt, setTilt] = useState({ x: 0, y: 0 })
-  const [expanded, setExpanded] = useState(false)
+/** Group label that sits on the timeline, aligned with the card text column. */
+function GroupHeading({ icon, label }: { icon: ReactNode; label: string }) {
+  return (
+    <h3 className="flex items-center gap-2 font-display text-xl font-bold text-heading md:pl-16">
+      {icon}
+      {label}
+    </h3>
+  )
+}
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!cardRef.current) return
-    const rect = cardRef.current.getBoundingClientRect()
-    setTilt({
-      x: ((e.clientY - rect.top) / rect.height - 0.5) * -8,
-      y: ((e.clientX - rect.left) / rect.width - 0.5) * 8,
-    })
-  }
+function ExpCard({ exp, i }: { exp: ExperienceEntry; i: number }) {
+  const ref = useScrollReveal(i * 80)
+  const [expanded, setExpanded] = useState(false)
+  const { ref: cardRef, hovered, transform, handlers } = useTilt({ max: 8, scale: 1.01 })
+  const Icon = exp.icon
 
   return (
     <div ref={ref} className="reveal relative flex gap-6 md:pl-16" style={{ perspective: '800px' }}>
@@ -108,9 +76,7 @@ function ExpCard({ exp, i }: { exp: typeof experiences[0]; i: number }) {
 
       <div
         ref={cardRef}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => { setHovered(false); setTilt({ x: 0, y: 0 }) }}
-        onMouseMove={handleMouseMove}
+        {...handlers}
         onClick={() => setExpanded(!expanded)}
         className="flex-1 rounded-2xl p-6 transition-all duration-300 cursor-pointer relative overflow-hidden"
         style={{
@@ -121,7 +87,7 @@ function ExpCard({ exp, i }: { exp: typeof experiences[0]; i: number }) {
           boxShadow: hovered
             ? `0 20px 40px rgba(0,0,0,0.3), 0 0 40px ${exp.color}15`
             : "0 4px 24px rgba(0,0,0,0.15)",
-          transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(${hovered ? 1.01 : 1})`,
+          transform,
           transformStyle: 'preserve-3d',
         }}
       >
@@ -131,14 +97,35 @@ function ExpCard({ exp, i }: { exp: typeof experiences[0]; i: number }) {
 
         {/* Top row */}
         <div className="flex items-start gap-4 relative z-10">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl transition-all duration-300"
-            style={{
-              background: `${exp.color}15`,
-              boxShadow: hovered ? `0 0 20px ${exp.color}25` : 'none',
-              transform: hovered ? 'scale(1.1) rotate(5deg)' : 'scale(1)',
-            }}>
-            {exp.icon}
-          </div>
+          {exp.logo ? (
+            /* Real product logo — soft at rest, neon on hover */
+            <div className="relative h-12 w-12 shrink-0 transition-all duration-300"
+              style={{ transform: hovered ? 'scale(1.08) rotate(3deg)' : 'scale(1)' }}>
+              <span
+                aria-hidden
+                className="absolute -inset-1 rounded-2xl blur-md transition-opacity duration-500"
+                style={{ background: `linear-gradient(135deg, ${exp.color}, #E879F9)`, opacity: hovered ? 0.7 : 0.35 }}
+              />
+              <span className="relative block h-12 w-12 overflow-hidden rounded-xl border"
+                style={{
+                  borderColor: `${exp.color}55`,
+                  background: '#000',
+                  boxShadow: `0 0 16px ${exp.color}40, inset 0 0 8px rgba(0,0,0,0.4)`,
+                }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={exp.logo} alt={`${exp.org} logo`} className="h-full w-full object-cover" />
+              </span>
+            </div>
+          ) : (
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-all duration-300"
+              style={{
+                background: `${exp.color}15`,
+                boxShadow: hovered ? `0 0 20px ${exp.color}25` : 'none',
+                transform: hovered ? 'scale(1.1) rotate(5deg)' : 'scale(1)',
+              }}>
+              <Icon size={24} strokeWidth={1.7} aria-hidden style={{ color: exp.color }} />
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
               <h4 className="font-display text-lg font-bold text-heading">{exp.role}</h4>
@@ -154,7 +141,24 @@ function ExpCard({ exp, i }: { exp: typeof experiences[0]; i: number }) {
                 <span className="font-mono text-xs" style={{ color: exp.color }}>{exp.period}</span>
               </div>
             </div>
-            <p className="mt-1 font-mono text-sm" style={{ color: exp.color }}>{exp.org}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+              <p className="font-mono text-sm" style={{ color: exp.color }}>{exp.org}</p>
+              {exp.link && (
+                <a
+                  href={exp.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  title={exp.link}
+                  aria-label={`Visit live platform — ${liveHost(exp.link)}`}
+                  className="live-pill px-2.5 py-[3px] text-[10px]"
+                >
+                  <span className="live-dot" aria-hidden />
+                  <span className="font-bold uppercase tracking-widest">Visit Live Platform</span>
+                  <ExternalLink size={11} />
+                </a>
+              )}
+            </div>
             <p className="mt-3 text-sm text-body leading-relaxed">{exp.desc}</p>
 
             {/* Skills tags */}

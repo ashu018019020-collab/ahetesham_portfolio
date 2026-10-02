@@ -1,167 +1,59 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { useScrollReveal } from '@/lib/hooks'
+import { useState, useEffect } from 'react'
+import Section from './Section'
+import { useBodyScrollLock, useModalFocus, useScrollReveal, useStepCycle, useTilt } from '@/lib/hooks'
 import { ChevronDown, X, ArrowRight } from 'lucide-react'
-
-const careers = [
-  {
-    emoji: '🤖',
-    title: 'AI Engineering',
-    desc: 'Building intelligent systems, automation workflows, and AI-powered applications that solve real-world problems and enhance business efficiency.',
-    color: '#FF4500',
-    details: [
-      'End-to-end AI system design and deployment',
-      'Machine learning model training & evaluation',
-      'REST API development for AI services',
-      'Real-time inference pipelines',
-    ],
-    tools: ['Python', 'TensorFlow', 'Flask', 'Docker', 'AWS'],
-    workflow: [
-      { icon: '📋', label: 'Problem Definition', detail: 'Identify business requirements & data availability' },
-      { icon: '🗄️', label: 'Data Collection', detail: 'Gather, clean & preprocess datasets' },
-      { icon: '🤖', label: 'Model Training', detail: 'Select algorithms, train & tune hyperparameters' },
-      { icon: '📊', label: 'Evaluation', detail: 'Test accuracy, precision, recall & F1 score' },
-      { icon: '🚀', label: 'Deployment', detail: 'Containerize model & deploy to production' },
-    ],
-  },
-  {
-    emoji: '🧬',
-    title: 'Generative AI & LLMs',
-    desc: 'Developing applications powered by Large Language Models, creating chatbots, content generation systems, and agentic AI workflows.',
-    color: '#8b5cf6',
-    details: [
-      'Prompt engineering & chain-of-thought reasoning',
-      'RAG (Retrieval Augmented Generation) pipelines',
-      'Fine-tuning open-source LLMs',
-      'Multi-modal AI applications',
-    ],
-    tools: ['OpenAI API', 'Gemini', 'LangChain', 'Hugging Face', 'RAG'],
-    workflow: [
-      { icon: '📝', label: 'Prompt Design', detail: 'Craft effective prompts with few-shot examples' },
-      { icon: '📚', label: 'Context Retrieval', detail: 'RAG pipeline fetches relevant documents' },
-      { icon: '🧠', label: 'LLM Processing', detail: 'Model generates contextual response' },
-      { icon: '✅', label: 'Validation', detail: 'Fact-check & format output for accuracy' },
-      { icon: '🔗', label: 'Integration', detail: 'Embed into production application flow' },
-    ],
-  },
-  {
-    emoji: '📊',
-    title: 'Data Science & Analytics',
-    desc: 'Transforming raw data into actionable insights through statistical analysis, predictive modeling, and interactive dashboard development.',
-    color: '#10b981',
-    details: [
-      'Exploratory Data Analysis (EDA) & statistics',
-      'Power BI dashboard development with DAX',
-      'Predictive modeling & time-series forecasting',
-      'A/B testing & hypothesis validation',
-    ],
-    tools: ['Python', 'Pandas', 'NumPy', 'Power BI', 'SQL', 'Tableau'],
-    workflow: [
-      { icon: '🗄️', label: 'Data Extraction', detail: 'SQL queries to pull data from databases' },
-      { icon: '🧹', label: 'Cleaning', detail: 'Handle missing values, outliers & duplicates' },
-      { icon: '🔍', label: 'EDA', detail: 'Statistical analysis & pattern discovery' },
-      { icon: '📈', label: 'Visualization', detail: 'Interactive charts & Power BI dashboards' },
-      { icon: '💡', label: 'Insights', detail: 'Actionable recommendations for stakeholders' },
-    ],
-  },
-  {
-    emoji: '🧠',
-    title: 'Agentic AI',
-    desc: 'Designing autonomous AI agents that reason, plan, and execute complex multi-step tasks with minimal human intervention using LLM-powered decision frameworks.',
-    color: '#FF8C00',
-    details: [
-      'Multi-step reasoning & planning',
-      'Tool-use & function calling',
-      'Memory management for long conversations',
-      'Self-correcting & reflective agents',
-    ],
-    tools: ['n8n', 'LLM Agents', 'APIs', 'Webhooks', 'Python'],
-    workflow: [
-      { icon: '🎯', label: 'Goal Setting', detail: 'Define objective & success criteria' },
-      { icon: '🧠', label: 'Reasoning', detail: 'LLM decomposes goal into subtasks' },
-      { icon: '🔧', label: 'Tool Selection', detail: 'Choose APIs, databases & services' },
-      { icon: '⚡', label: 'Execution', detail: 'Agent performs actions autonomously' },
-      { icon: '🔄', label: 'Reflection', detail: 'Self-evaluate & retry if needed' },
-    ],
-  },
-  {
-    emoji: '⚙️',
-    title: 'Automation Agent AI Workflow',
-    desc: 'Building end-to-end intelligent automation workflows using n8n, webhooks, and API integrations to streamline business processes.',
-    color: '#ec4899',
-    details: [
-      'Visual workflow orchestration with n8n',
-      'Multi-step conditional branching',
-      'Error handling & retry logic',
-      'Cross-platform API orchestration',
-    ],
-    tools: ['n8n', 'Webhooks', 'REST APIs', 'Zapier', 'Python'],
-    workflow: [
-      { icon: '📩', label: 'Trigger', detail: 'Webhook or scheduled event fires' },
-      { icon: '🔀', label: 'Data Parse', detail: 'Extract & validate incoming payload' },
-      { icon: '🧠', label: 'AI Processing', detail: 'LLM agent reasons about data' },
-      { icon: '🔗', label: 'API Calls', detail: 'Connect to external services' },
-      { icon: '✅', label: 'Complete', detail: 'Action performed, results logged' },
-    ],
-  },
-]
+import { CAREER_DOMAINS, type CareerDomain } from '@/lib/data/skills'
 
 export default function CareerFocus() {
-  const ref = useScrollReveal(80)
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null)
 
+  useBodyScrollLock(expandedIdx !== null)
+
+  // Close on ESC key (parity with Certifications modal)
   useEffect(() => {
-    document.body.style.overflow = expandedIdx !== null ? 'hidden' : 'unset'
-    return () => { document.body.style.overflow = 'unset' }
+    if (expandedIdx === null) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setExpandedIdx(null) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
   }, [expandedIdx])
 
   return (
-    <section id="career-focus" className="relative py-20 px-6 lg:px-12">
-      <div ref={ref} className="reveal-3d-left mx-auto max-w-7xl">
-        <h2 className="font-display text-3xl font-bold text-[#D9D9D9] sm:text-4xl">
-          <span className="section-title section-title-glow" data-text="Career Focus">Career Focus</span>
-        </h2>
-        <p className="mt-3 text-[#94a3b8] text-base">The domains where I aim to create the most impact.</p>
-
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {careers.map((c, i) => (
+    <>
+      <Section
+        id="career-focus"
+        title="Career Focus"
+        subtitle="The domains where I aim to create the most impact."
+        revealVariant="3d-left"
+        containerClassName="shell"
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {CAREER_DOMAINS.map((c, i) => (
             <CareerCard key={c.title} career={c} index={i} onExpand={() => setExpandedIdx(i)} />
           ))}
         </div>
-      </div>
+      </Section>
 
       {/* Expand Modal */}
       {expandedIdx !== null && (
-        <CareerModal career={careers[expandedIdx]} onClose={() => setExpandedIdx(null)} />
+        <CareerModal career={CAREER_DOMAINS[expandedIdx]} onClose={() => setExpandedIdx(null)} />
       )}
-    </section>
+    </>
   )
 }
 
-function CareerCard({ career, index, onExpand }: { career: typeof careers[0]; index: number; onExpand: () => void }) {
+function CareerCard({ career, index, onExpand }: { career: CareerDomain; index: number; onExpand: () => void }) {
   const ref = useScrollReveal(index * 80)
-  const cardRef = useRef<HTMLDivElement>(null)
-  const [hovered, setHovered] = useState(false)
-  const [tilt, setTilt] = useState({ x: 0, y: 0 })
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!cardRef.current) return
-    const rect = cardRef.current.getBoundingClientRect()
-    setTilt({
-      x: ((e.clientY - rect.top) / rect.height - 0.5) * -12,
-      y: ((e.clientX - rect.left) / rect.width - 0.5) * 12,
-    })
-  }
+  const { ref: cardRef, hovered, transform, handlers } = useTilt({ max: 12, scale: 1.03 })
+  const CareerIcon = career.icon
 
   return (
     <div ref={ref} className="reveal" style={{ perspective: '800px' }}>
       <div
         ref={cardRef}
+        {...handlers}
         onClick={onExpand}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => { setHovered(false); setTilt({ x: 0, y: 0 }) }}
-        onMouseMove={handleMouseMove}
         className="relative overflow-hidden rounded-2xl p-6 transition-all duration-300 cursor-pointer"
         style={{
           background: hovered
@@ -171,7 +63,7 @@ function CareerCard({ career, index, onExpand }: { career: typeof careers[0]; in
           boxShadow: hovered
             ? `0 20px 40px rgba(0,0,0,0.3), 0 0 40px ${career.color}20`
             : "0 4px 20px rgba(0,0,0,0.1)",
-          transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(${hovered ? 1.03 : 1})`,
+          transform,
           transformStyle: 'preserve-3d',
         }}
       >
@@ -181,14 +73,16 @@ function CareerCard({ career, index, onExpand }: { career: typeof careers[0]; in
         <div className="absolute -bottom-6 -left-6 h-16 w-16 rounded-full blur-2xl pointer-events-none transition-all duration-700"
           style={{ background: career.color, opacity: hovered ? 0.2 : 0 }} />
 
-        {/* Emoji icon with glow */}
+        {/* Icon badge with glow */}
         <div className="relative mb-4 inline-flex">
-          <div className="text-4xl transition-all duration-500"
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-500"
             style={{
-              transform: hovered ? 'scale(1.2) rotate(8deg)' : 'scale(1) rotate(0)',
-              filter: hovered ? `drop-shadow(0 0 12px ${career.color})` : 'none',
+              background: `${career.color}1a`,
+              border: `1px solid ${career.color}33`,
+              transform: hovered ? 'scale(1.12) rotate(8deg)' : 'scale(1) rotate(0)',
+              boxShadow: hovered ? `0 0 24px ${career.color}45` : 'none',
             }}>
-            {career.emoji}
+            <CareerIcon size={28} strokeWidth={1.7} aria-hidden style={{ color: career.color, filter: hovered ? `drop-shadow(0 0 8px ${career.color}90)` : 'none', transition: 'filter 0.3s' }} />
           </div>
           {hovered && (
             <div className="absolute inset-0 rounded-full animate-pulse-ring pointer-events-none"
@@ -201,12 +95,15 @@ function CareerCard({ career, index, onExpand }: { career: typeof careers[0]; in
 
         {/* Mini workflow preview */}
         <div className="mt-4 flex items-center gap-1 flex-wrap">
-          {career.workflow.slice(0, 4).map((step, si) => (
+          {career.workflow.slice(0, 4).map((step, si) => {
+            const MiniIcon = step.icon
+            return (
             <span key={si} className="flex items-center gap-1">
-              <span className="text-xs">{step.icon}</span>
+              <MiniIcon size={13} aria-hidden style={{ color: career.color + 'b0' }} />
               {si < 3 && <ArrowRight size={8} className="text-body-light/30" />}
             </span>
-          ))}
+            )
+          })}
           <span className="text-[10px] font-mono ml-1" style={{ color: career.color }}>+{career.workflow.length - 4}</span>
         </div>
 
@@ -230,21 +127,17 @@ function CareerCard({ career, index, onExpand }: { career: typeof careers[0]; in
   )
 }
 
-function CareerModal({ career, onClose }: { career: typeof careers[0]; onClose: () => void }) {
-  const [activeStep, setActiveStep] = useState(0)
-
-  useEffect(() => {
-    const iv = setInterval(() => {
-      setActiveStep(p => (p + 1) % career.workflow.length)
-    }, 2200)
-    return () => clearInterval(iv)
-  }, [career.workflow.length])
+function CareerModal({ career, onClose }: { career: CareerDomain; onClose: () => void }) {
+  const activeStep = useStepCycle(career.workflow.length, 2200)
+  // Modal only mounts while open: trap Tab focus, restore it to the opener on close
+  const modalRef = useModalFocus(true)
+  const ModalIcon = career.icon
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}
       onClick={onClose}>
-      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl p-6 md:p-8"
+      <div ref={modalRef} tabIndex={-1} className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl p-6 md:p-8"
         style={{
           background: 'linear-gradient(135deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))',
           border: `1px solid ${career.color}30`,
@@ -252,14 +145,17 @@ function CareerModal({ career, onClose }: { career: typeof careers[0]; onClose: 
         }}
         onClick={e => e.stopPropagation()}>
 
-        <button onClick={onClose}
+        <button onClick={onClose} aria-label='Close details'
           className="absolute right-4 top-4 rounded-full p-2 text-body-light/50 transition-colors hover:bg-white/5 hover:text-heading z-10">
           <X size={20} />
         </button>
 
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
-          <div className="text-5xl" style={{ filter: `drop-shadow(0 0 15px ${career.color})` }}>{career.emoji}</div>
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl"
+            style={{ background: `${career.color}1a`, border: `1px solid ${career.color}40`, boxShadow: `0 0 30px ${career.color}25` }}>
+            <ModalIcon size={32} strokeWidth={1.6} aria-hidden style={{ color: career.color, filter: `drop-shadow(0 0 10px ${career.color}90)` }} />
+          </div>
           <div>
             <h2 className="font-display text-xl font-bold text-heading">{career.title}</h2>
             <p className="text-sm text-body-light mt-1">{career.desc}</p>
@@ -312,6 +208,7 @@ function CareerModal({ career, onClose }: { career: typeof careers[0]; onClose: 
             {career.workflow.map((step, si) => {
               const isActive = si === activeStep
               const isPast = si < activeStep
+              const StepIcon = step.icon
               return (
                 <div key={si} className="flex items-center gap-2">
                   <div className="relative flex flex-col items-center gap-1.5 rounded-xl px-3 py-3 transition-all duration-500"
@@ -323,10 +220,8 @@ function CareerModal({ career, onClose }: { career: typeof careers[0]; onClose: 
                       boxShadow: isActive ? `0 0 25px ${career.color}30, 0 4px 15px ${career.color}15` : 'none',
                       transform: isActive ? 'scale(1.1) translateY(-2px)' : 'scale(1)',
                     }}>
-                    <span className="text-lg transition-transform duration-300"
-                      style={{ transform: isActive ? 'scale(1.2)' : 'scale(1)' }}>
-                      {step.icon}
-                    </span>
+                    <StepIcon size={22} strokeWidth={1.8} aria-hidden className="transition-transform duration-300"
+                      style={{ color: isActive ? career.color : isPast ? '#94a3b8' : '#64748b', transform: isActive ? 'scale(1.2)' : 'scale(1)' }} />
                     <span className="font-mono text-[10px] font-medium whitespace-nowrap"
                       style={{ color: isActive ? career.color : isPast ? '#94a3b8' : '#475569' }}>
                       {step.label}

@@ -5,6 +5,18 @@ import { ReactNode } from 'react'
 
 type RevealVariant = 'default' | '3d-up' | '3d-left' | '3d-right' | '3d-title'
 
+const REVEAL_CLASSES: Record<RevealVariant, string> = {
+  default: 'reveal',
+  '3d-up': 'reveal-3d-up',
+  '3d-left': 'reveal-3d-left',
+  '3d-right': 'reveal-3d-right',
+  '3d-title': 'reveal-3d-title',
+}
+
+/**
+ * The one owner of section chrome: outer padding, centred container, glowing
+ * title, optional subtitle, and the scroll-reveal wrapper around the children.
+ */
 export default function Section({
   id,
   title,
@@ -13,6 +25,8 @@ export default function Section({
   className = '',
   delay = 0,
   revealVariant = 'default',
+  containerClassName = 'shell',
+  titleClassName = 'section-title section-title-glow',
 }: {
   id: string
   title: string
@@ -21,28 +35,16 @@ export default function Section({
   className?: string
   delay?: number
   revealVariant?: RevealVariant
+  containerClassName?: string
+  titleClassName?: string
 }) {
   const ref = useScrollReveal(delay)
 
-  const revealClass =
-    revealVariant === '3d-up'
-      ? 'reveal-3d-up'
-      : revealVariant === '3d-left'
-        ? 'reveal-3d-left'
-        : revealVariant === '3d-right'
-          ? 'reveal-3d-right'
-          : revealVariant === '3d-title'
-            ? 'reveal-3d-title'
-            : 'reveal'
-
   return (
-    <section id={id} className={`px-6 py-16 md:py-24 ${className}`}>
-      <div className="mx-auto max-w-6xl">
-        <div ref={ref} className={revealClass}>
-          <h2
-            className="section-title section-title-glow"
-            data-text={title}
-          >
+    <section id={id} className={`py-16 md:py-24 ${className}`}>
+      <div className={containerClassName}>
+        <div ref={ref} className={REVEAL_CLASSES[revealVariant]}>
+          <h2 className={titleClassName} data-text={title}>
             {title}
           </h2>
           {subtitle && (

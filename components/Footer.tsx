@@ -2,38 +2,14 @@
 
 import { Mail, Heart, ArrowUp } from 'lucide-react'
 import { LinkedinIcon, GithubIcon } from './Icons'
-import { CONTACT } from '@/lib/constants'
+import { FOOTER_LINKS, SOCIALS, type SocialIcon } from '@/lib/data/profile'
 import AKLogo from './AKLogo'
 
-const links = [
-  { label: 'About', href: '#about' },
-  { label: 'Projects', href: '#projects' },
-  { label: 'Skills', href: '#skills' },
-  { label: 'Career Focus', href: '#career-focus' },
-  { label: 'Certifications', href: '#certifications' },
-  { label: 'Contact', href: '#contact' },
-]
-
-const socials = [
-  {
-    label: 'LinkedIn',
-    href: CONTACT.linkedin,
-    icon: <LinkedinIcon size={18} />,
-    glow: 'hover:text-[#0A66C2] hover:border-[#0A66C2]/40 hover:shadow-[0_0_20px_rgba(10,102,194,0.35)] hover:bg-[#0A66C2]/10',
-  },
-  {
-    label: 'GitHub',
-    href: CONTACT.github,
-    icon: <GithubIcon size={18} />,
-    glow: 'hover:text-[#e6edf3] hover:border-white/30 hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:bg-white/10',
-  },
-  {
-    label: 'Email',
-    href: `mailto:${CONTACT.email}`,
-    icon: <Mail size={18} />,
-    glow: 'hover:text-[#FF8C00] hover:border-[#FF8C00]/40 hover:shadow-[0_0_20px_rgba(255,140,0,0.35)] hover:bg-[#FF8C00]/10',
-  },
-]
+const SOCIAL_ICONS: Record<SocialIcon, React.ReactNode> = {
+  linkedin: <LinkedinIcon size={18} />,
+  github: <GithubIcon size={18} />,
+  email: <Mail size={18} />,
+}
 
 export default function Footer() {
   const year = new Date().getFullYear()
@@ -41,12 +17,12 @@ export default function Footer() {
   const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
 
   return (
-    <footer className="relative z-10 overflow-hidden border-t border-white/5 px-6 pb-10 pt-16">
+    <footer className="relative z-10 overflow-hidden border-t border-white/5 pb-10 pt-16">
       {/* Glow divider */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#FF4500]/60 to-transparent" />
       <div className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[80%] -translate-x-1/2 rounded-full bg-[#FF4500]/[0.05] blur-3xl" />
 
-      <div className="relative mx-auto max-w-6xl">
+      <div className="relative shell">
         <div className="flex flex-col items-center gap-10 md:flex-row md:justify-between">
           <div className="text-center md:text-left">
             <a href="#" onClick={(e) => { e.preventDefault(); scrollTop() }} className="font-display" aria-label="Ahetesham Khan — back to top">
@@ -58,7 +34,7 @@ export default function Footer() {
           </div>
 
           <nav className="flex flex-wrap justify-center gap-x-7 gap-y-3" aria-label="Footer navigation">
-            {links.map((link) => (
+            {FOOTER_LINKS.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
@@ -71,7 +47,7 @@ export default function Footer() {
           </nav>
 
           <div className="flex items-center gap-3">
-            {socials.map((s) => (
+            {SOCIALS.map((s) => (
               <a
                 key={s.label}
                 href={s.href}
@@ -80,7 +56,7 @@ export default function Footer() {
                 aria-label={s.label}
                 className={`flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-body-light backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:scale-110 ${s.glow}`}
               >
-                {s.icon}
+                {SOCIAL_ICONS[s.icon]}
               </a>
             ))}
             <button

@@ -4,35 +4,7 @@ import { useEffect, useState } from 'react'
 import { useScrollReveal } from '@/lib/hooks'
 import { ExternalLink, Star, GitFork, Code2 } from 'lucide-react'
 import { GithubIcon } from './Icons'
-
-interface Repo {
-  id: number
-  name: string
-  description: string | null
-  html_url: string
-  stargazers_count: number
-  forks_count: number
-  language: string | null
-  topics: string[]
-  updated_at: string
-  homepage: string | null
-}
-
-const GITHUB_USERNAME = 'aheteshamkhan'
-
-const languageColors: Record<string, string> = {
-  Python: '#3572A5',
-  JavaScript: '#f1e05a',
-  TypeScript: '#3178c6',
-  HTML: '#e34c26',
-  CSS: '#563d7c',
-  Java: '#b07219',
-  'C++': '#f34b7d',
-  C: '#555555',
-  Shell: '#89e051',
-  JupyterNotebook: '#DA5B0B',
-  Markdown: '#083fa1',
-}
+import { fetchRepos, GITHUB_USERNAME, LANGUAGE_COLORS, type Repo } from '@/lib/github'
 
 export default function GitHubRepos() {
   const ref = useScrollReveal(80)
@@ -41,26 +13,10 @@ export default function GitHubRepos() {
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    const fetchRepos = async () => {
-      try {
-        const res = await fetch(
-          `https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=updated&per_page=6`,
-          {
-            headers: {
-              Accept: 'application/vnd.github.v3+json',
-            },
-          }
-        )
-        if (!res.ok) throw new Error('Failed')
-        const data = await res.json()
-        setRepos(data.filter((r: Repo) => !r.name.includes('.github')))
-      } catch {
-        setError(true)
-      } finally {
-        setLoading(false)
-      }
-    }
     fetchRepos()
+      .then(setRepos)
+      .catch(() => setError(true))
+      .finally(() => setLoading(false))
   }, [])
 
   if (loading) {
@@ -127,7 +83,7 @@ export default function GitHubRepos() {
                   <span className="flex items-center gap-1.5 text-xs text-body-light">
                     <span
                       className="h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: languageColors[repo.language] || '#6e7681' }}
+                      style={{ backgroundColor: LANGUAGE_COLORS[repo.language] || '#6e7681' }}
                     />
                     {repo.language}
                   </span>

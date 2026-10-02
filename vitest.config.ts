@@ -4,12 +4,12 @@ import path from 'path'
 export default defineConfig({
   test: {
     environment: 'jsdom',
-    setupFiles: ['./src/__tests__/setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}'],
+    setupFiles: ['./__tests__/setup.ts'],
+    include: ['__tests__/**/*.test.{ts,tsx}'],
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(import.meta.dirname, '.'),
     },
   },
 })

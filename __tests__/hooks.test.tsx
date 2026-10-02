@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { renderHook, act, render, cleanup } from '@testing-library/react'
-import { useScrollReveal, useScrollSpy } from '@/lib/hooks'
+import { renderHook, act, render, cleanup, fireEvent } from '@testing-library/react'
+import { useScrollReveal, useScrollSpy, useModalFocus } from '@/lib/hooks'
 
 let capturedCb: IntersectionObserverCallback | null = null
 
@@ -92,5 +92,55 @@ describe('useScrollSpy contract', () => {
     unmount()
     expect(spy).toHaveBeenCalledWith('scroll', expect.any(Function))
     spy.mockRestore()
+  })
+})
+
+function ModalHarness({ open }: { open: boolean }) {
+  const ref = useModalFocus(open)
+  return (
+    <div>
+      <button data-testid='opener'>opener</button>
+      {open && (
+        <div ref={ref} role='dialog' aria-modal='true' data-testid='dialog'>
+          <button data-testid='first'>First</button>
+          <button data-testid='middle'>Middle</button>
+          <button data-testid='last'>Last</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+describe('useModalFocus contract', () => {
+  it('moves focus into the dialog when it opens', () => {
+    const { getByTestId } = render(<ModalHarness open />)
+    expect(document.activeElement).toBe(getByTestId('first'))
+  })
+
+  it('traps Shift+Tab on the first item back to the last item', () => {
+    const { getByTestId } = render(<ModalHarness open />)
+    expect(document.activeElement).toBe(getByTestId('first'))
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true })
+    expect(document.activeElement).toBe(getByTestId('last'))
+  })
+
+  it('traps Tab on the last item back to the first item', () => {
+    const { getByTestId } = render(<ModalHarness open />)
+    const last = getByTestId('last')
+    last.focus()
+    fireEvent.keyDown(document, { key: 'Tab' })
+    expect(document.activeElement).toBe(getByTestId('first'))
+  })
+
+  it('returns focus to the opener element on close', () => {
+    const { getByTestId, rerender } = render(<ModalHarness open={false} />)
+    const opener = getByTestId('opener')
+    opener.focus()
+
+    rerender(<ModalHarness open />)
+    expect(document.activeElement).toBe(getByTestId('first'))
+
+    rerender(<ModalHarness open={false} />)
+    expect(document.activeElement).toBe(opener)
   })
 })

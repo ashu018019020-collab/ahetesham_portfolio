@@ -4,17 +4,8 @@ import { useState, useEffect } from 'react'
 import { useScrollSpy } from '@/lib/hooks'
 import { Menu, X, Download } from 'lucide-react'
 import { CONTACT } from '@/lib/constants'
+import { NAV_LINKS } from '@/lib/data/profile'
 import AKLogo from './AKLogo'
-
-const NAV_LINKS = [
-  { label: 'About', href: '#about' },
-  { label: 'Projects', href: '#projects' },
-  { label: 'Skills', href: '#skills' },
-  { label: 'Experience', href: '#experience' },
-  { label: 'Education', href: '#education' },
-  { label: 'Certifications', href: '#certifications' },
-  { label: 'Contact', href: '#contact' },
-]
 
 const sectionIds = NAV_LINKS.map((l) => l.href.replace('#', ''))
 
@@ -40,26 +31,32 @@ export default function Nav() {
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'glass-strong shadow-lg shadow-black/20' : 'bg-transparent'
+        scrolled ? 'glass-strong nav-scan shadow-lg shadow-black/20' : 'bg-transparent'
       }`}
       role="navigation"
       aria-label="Main navigation"
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+      <div className="shell flex items-center justify-between py-4">
         {/* AK Logo + Name */}
-        <a href="#" className="font-display transition-colors" onClick={close}>
+        <a
+          href="#"
+          aria-label="Ahetesham Khan — back to top"
+          className="group/logo font-display transition-colors"
+          onClick={close}
+        >
           <AKLogo size="md" showText />
         </a>
 
-        {/* Desktop links */}
-        <div className="hidden items-center gap-1 md:flex">
+        {/* Desktop links — from lg up; tablets get the drawer instead of a
+            crammed row, which left no room for the brand lockup. */}
+        <div className="hidden items-center gap-0.5 lg:flex">
           {NAV_LINKS.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              className={`rounded-lg px-2.5 py-2 text-sm font-medium transition-colors xl:px-3 ${
                 activeId === link.href.replace('#', '')
-                  ? 'bg-primary/15 text-primary-light'
+                  ? 'bg-primary/15 text-primary-light nav-active-pill'
                   : 'text-body-light hover:text-heading hover:bg-white/5'
               }`}
             >
@@ -70,17 +67,16 @@ export default function Nav() {
             href={CONTACT.resumePath}
             target="_blank"
             rel="noopener noreferrer"
-            className="ml-2 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-all hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5"
-            style={{ boxShadow: '0 0 15px rgba(255,69,0,0.3)' }}
+            className="cv-btn ml-2 inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-bold tracking-wide text-[#111] transition-transform duration-300 hover:-translate-y-0.5 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8C00]/80 xl:px-5"
           >
-            <Download size={14} />
-            Download CV
+            <Download size={15} className="transition-transform duration-300 group-hover:translate-y-0.5" />
+            <span>Download CV</span>
           </a>
         </div>
 
         {/* Mobile toggle */}
         <button
-          className="relative z-50 rounded-lg p-2 text-heading hover:bg-white/5 md:hidden"
+          className="relative z-50 rounded-lg p-2 text-heading hover:bg-white/5 lg:hidden"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={mobileOpen}
@@ -90,7 +86,7 @@ export default function Nav() {
       </div>
 
       {/* Mobile slide-in */}
-      <div className={`fixed inset-0 z-40 transition-all duration-300 md:hidden ${
+      <div className={`fixed inset-0 z-40 transition-all duration-300 lg:hidden ${
         mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
       }`}>
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={close} />
@@ -105,7 +101,7 @@ export default function Nav() {
                 onClick={close}
                 className={`rounded-lg px-4 py-3 text-base font-medium transition-colors ${
                   activeId === link.href.replace('#', '')
-                    ? 'bg-primary/15 text-primary-light'
+                    ? 'bg-primary/15 text-primary-light nav-active-pill'
                     : 'text-body-light hover:text-heading hover:bg-white/5'
                 }`}
               >
@@ -117,10 +113,10 @@ export default function Nav() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={close}
-              className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-base font-medium text-white transition-all hover:shadow-lg hover:shadow-primary/30"
+              className="cv-btn mt-4 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-3 text-base font-bold tracking-wide text-[#111]"
             >
               <Download size={16} />
-              Download CV
+              <span>Download CV</span>
             </a>
           </div>
         </div>

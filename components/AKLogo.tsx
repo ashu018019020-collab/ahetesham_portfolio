@@ -1,42 +1,73 @@
 'use client'
 
+/**
+ * Site logo — the neon "AK" emblem.
+ * Used in the header (Nav) and the footer, so both brand marks stay in sync.
+ * The PNG already carries an alpha channel, so it drops straight onto the dark UI.
+ */
 export default function AKLogo({ size = 'md', showText = false }: { size?: 'sm' | 'md' | 'lg'; showText?: boolean }) {
   const sizes = {
-    sm: { ak: 30, name: 'text-sm', sub: 'text-[9px]' },
-    md: { ak: 36, name: 'text-[15px]', sub: 'text-[10px]' },
-    lg: { ak: 42, name: 'text-base', sub: 'text-xs' },
+    sm: { mark: 36, divider: 26, name: 'text-sm', sub: 'text-[9px]' },
+    md: { mark: 46, divider: 32, name: 'text-[16px]', sub: 'text-[10px]' },
+    lg: { mark: 56, divider: 38, name: 'text-[17px]', sub: 'text-[11px]' },
   }
   const s = sizes[size]
 
   return (
     <div className="flex items-center gap-0">
-      {/* AK gradient text — A is bright, K is deeper red */}
+      {/* Neon AK emblem */}
       <span
-        className="font-display font-bold leading-none select-none"
-        style={{
-          fontSize: s.ak,
-          background: 'linear-gradient(to right, #ff9999 0%, #FF6B00 35%, #FF4500 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-        }}
+        className="relative inline-flex shrink-0 items-center justify-center"
+        style={{ width: s.mark, height: s.mark }}
       >
-        AK
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-[8%] rounded-full bg-[#FF6B00]/25 blur-md"
+        />
+        <img
+          src="/logos/ak-emblem.png"
+          alt=""
+          aria-hidden="true"
+          width={s.mark}
+          height={s.mark}
+          draggable={false}
+          className="relative h-full w-full select-none object-contain drop-shadow-[0_0_10px_rgba(255,107,0,0.45)]"
+        />
       </span>
 
       {showText && (
         <>
-          {/* Vertical divider */}
-          <div className="mx-3.5 h-9 w-px bg-white/20" />
+          {/* Vertical divider — ember → cyan, matching the wordmark palette */}
+          <div
+            className="mx-3.5 hidden w-px sm:block lg:hidden xl:block"
+            style={{
+              height: s.divider,
+              background:
+                'linear-gradient(180deg, transparent, rgba(255,107,0,0.6), rgba(232,121,249,0.45), rgba(34,211,238,0.35), transparent)',
+            }}
+          />
 
-          {/* Name + subtitle */}
-          <div className="hidden sm:flex flex-col justify-center">
-            <span className={`${s.name} font-semibold text-heading leading-tight font-display tracking-wide`}>
+          {/* Name (flowing neon gradient + travelling sheen) + animated role.
+              Hidden in the 1024–1279 band: the full nav row + Download CV need
+              that room, and the emblem alone still reads as the brand. */}
+          <div className="hidden flex-col justify-center gap-0.5 sm:flex lg:hidden xl:flex">
+            <span
+              data-text="Ahetesham Khan"
+              className={`brand-name ${s.name} whitespace-nowrap font-display font-semibold leading-tight tracking-wide`}
+            >
               Ahetesham Khan
             </span>
-            <span className={`${s.sub} text-body-light leading-tight flex items-center gap-1.5`}>
-              AI Engineer &amp; Data Scientist
-              <span className="inline-block h-[5px] w-[5px] rounded-full bg-primary shadow-[0_0_6px_rgba(255,69,0,0.6)]" />
+            <span className={`${s.sub} flex items-center gap-1.5 whitespace-nowrap leading-tight`}>
+              <span className="brand-role-a">AI Engineer</span>
+              <span className="brand-sep" aria-hidden>
+                ·
+              </span>
+              <span className="brand-role-b">Data Scientist</span>
+              <span className="brand-dots" aria-hidden>
+                <i />
+                <i />
+                <i />
+              </span>
             </span>
           </div>
         </>
